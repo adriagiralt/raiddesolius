@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+  <meta charset="UTF-8">
+  <title>9è Raid de Solius</title>
+  <style>
+  body {
+    font-family: Helvetica, Arial, sans-serif;
+    margin: 2rem;
+    background: #e6dfd1; /* tocat a colors terrosos */
+    color: #3b2f25;
+  }
+  h1 { color: #5a3e2b; }
+  select {
+    padding: 6px;
+    font-size: 1em;
+    margin: 1rem 0;
+    background: #f3ebe0;
+    border: 1px solid #c9b49a;
+    border-radius: 6px;
+    color: #3b2f25;
+  }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    background: #fff7ef;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    margin-top: 1rem;
+  }
+  th, td {
+    border: 1px solid #d1bfa5;
+    padding: 8px 12px;
+    text-align: left;
+  }
+  th { background: #e5d8c8; }
+  ul {
+    list-style-type: none;
+    padding: 0;
+    margin-top: 1rem;
+  }
+  li {
+    background: #fff7ef;
+    margin-bottom: 6px;
+    padding: 8px 12px;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
+  .hidden { display: none; }
+</style>
+
+</head>
+<body>
+  <h1>🧗‍♀️9è Raid de Solius 🧗</h1>
+
+  <label for="vista">Selecciona la vista:</label>
+  <select id="vista">
+    <option value="ranking">🏆 Rànquing Equips</option>
+    <option value="ultims">📜 Últims Encadenats</option>
+    <option value="topAgulla">⛰️ Agulla més Pujada</option>
+    <option value="actius">🧗‍♀️ Equips Actius</option>
+  </select>
+
+  <!-- Continguts -->
+  <div id="rankingView" class="view">
+    <h2>🏆 Rànquing Equips</h2>
+    <table id="ranking"></table>
+  </div>
+
+  <div id="ultimsView" class="view hidden">
+    <h2>📜 Últims Encadenats</h2>
+    <ul id="ultims"></ul>
+  </div>
+
+  <div id="topAgullaView" class="view hidden">
+    <h2>⛰️ Agulla més pujada</h2>
+    <table id="topAgulla"></table>
+  </div>
+
+  <div id="actiusView" class="view hidden">
+    <h2>🧗‍♀️ Equips Actius</h2>
+    <table id="actius"></table>
+  </div>
+
+  <script>
+  const vistaSelect = document.getElementById("vista");
+  let refrescInterval;
+
+  // Canvi de vista
+  vistaSelect.addEventListener("change", () => {
+    mostrarVista(vistaSelect.value);
+    carregarDades(); // refrescar immediatament quan canvia
+  });
+
+  function mostrarVista(vista) {
+    document.querySelectorAll(".view").forEach(div => div.classList.add("hidden"));
+    if (vista === "ranking") document.getElementById("rankingView").classList.remove("hidden");
+    if (vista === "ultims") document.getElementById("ultimsView").classList.remove("hidden");
+    if (vista === "topAgulla") document.getElementById("topAgullaView").classList.remove("hidden");
+    if (vista === "actius") document.getElementById("actiusView").classList.remove("hidden");
+  }
+
+  async function carregarDades() {
+    const vista = vistaSelect.value;
+
+    try {
+      if (vista === "ranking") {
+        const rankingRes = await fetch("/api/ranking");
+        const ranking = await rankingRes.json();
+        document.getElementById("ranking").innerHTML = `
+          <tr><th>Posició</th><th>Equip</th><th>Agulles</th><th>Punts</th></tr>
+          ${ranking.map((r, i) => `
+            <tr>
+              <td>${i + 1}</td>
+              <td>${r.nom}</td>
+              <td>${r.agulles}</td>
+              <td>${r.punts}</td>
+            </tr>
+          `).join("")}
+        `;
+      }
+
+      if (vista === "actius") {
+        const equipsRes = await fetch("/api/equips/actius");
+        const equips = await equipsRes.json();
+        console.log(equips)
+        document.getElementById("actius").innerHTML = `
+          <tr><th>Equips</th></tr>
+          ${equips.map((e, i) => `
+            <tr>
+              <td>${e.nom}</td>
+            </tr>
+          `).join("")}
+        `;
+      }
+
+      if (vista === "ultims") {
+        // Intentar obtenir l'select si ja existeix
+        let equipSelect = document.getElementById("equipSelect");
+        const equip = equipSelect ? equipSelect.value : "tots";
+        const equip_txt = equip !== "tots" ? "/" + equip : "";
+
+        // Carregar dades
+        const [ultimsRes, equipsRes] = await Promise.all([
+          fetch("/api/ultims" + equip_txt),
+          fetch("/api/equips")
+        ]);
+        const [ultims, equips] = await Promise.all([
+          ultimsRes.json(),
+          equipsRes.json()
+        ]);
+
+        // Renderitzar
+        document.getElementById("ultimsView").innerHTML = `
+          <h2>📜 Últims Encadenats</h2>
+          <select id="equipSelect">
+            <option value="tots"> -- Tots -- </option>
+            ${equips.map(e => `<option value="${e.id}" ${e.id == equip ? "selected" : ""}>${e.nom}</option>`).join('')}
+          </select>
+          <table>
+            <thead>
+              <tr><th>Equip</th><th>Agulla</th><th>Via</th><th>Punts</th><th>Hora</th></tr>
+            </thead>
+            <tbody>
+              ${ultims.map(u => `
+                <tr>
+                  <td>${u.equipNom}</td>
+                  <td>${u.agullaNom}</td>
+                  <td>${u.viaNom || "-"}</td>
+                  <td>${u.punts}</td>
+                  <td>${new Date(u.createdAt).toLocaleString("ca-ES")}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        `;
+
+        // Assignar l’event només un cop
+        equipSelect = document.getElementById("equipSelect");
+        if (!equipSelect._listenerAfegit) {
+          equipSelect.addEventListener("change", () => {
+            carregarDades(); // refresca quan canvia
+          });
+          equipSelect._listenerAfegit = true;
+        }
+      }
+
+      if (vista === "topAgulla") {
+       const agullesRes = await fetch("/api/agulles");
+        const agulles = await agullesRes.json();
+        document.getElementById("topAgulla").innerHTML = `
+          <tr><th>Agulles</th><th>Equips</th></tr>
+          ${agulles.map((a, i) => `
+            <tr>
+              <td>${a.nom}</td><td>${a.total}</td>
+            </tr>
+          `).join("")}
+        `;
+      }
+    } catch (err) {
+      console.error("Error carregant dades:", err);
+    }
+  }
+
+  // Inici
+  mostrarVista("ranking");
+  carregarDades();
+  refrescInterval = setInterval(carregarDades, 20000); // refresc cada 20s
+</script>
+
+</body>
+</html>
