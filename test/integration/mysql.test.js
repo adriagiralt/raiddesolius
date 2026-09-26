@@ -13,7 +13,7 @@ let server;
 let url;
 
 before(async () => {
-  // Never recreate a database unless the caller explicitly selects the disposable test DB.
+  // Només recrea la base de dades si s'ha seleccionat explícitament la base de dades temporal de proves.
   assert.equal(process.env.DB_NAME, 'raid_test');
   db.options.logging = false;
   await db.sync({ force: true });
@@ -45,7 +45,7 @@ test('MySQL scoring, rollback, concurrent awards, and public endpoints', async (
   const totems = await Promise.all([controller.awardOnce(1, 1, 3001, 5, true), controller.awardOnce(2, 1, 3001, 5, true)]);
   assert.equal(totems.filter(Boolean).length, 1);
 
-  // A second team makes an injected OR clause observable.
+  // Un segon equip permet detectar l'efecte d'una clàusula OR injectada.
   await controller.replaceEncadenat(2, 2, null, 0, 1);
   const filtered = await controller.getLastEncadenatsByTeam('1 OR 1=1');
   assert.ok(filtered.every(row => row.equipNom === 'One'));

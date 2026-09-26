@@ -22,9 +22,9 @@ async function main() {
     if (stopping) return stopping;
     stopping = (async () => {
       let stopped = false;
-      try { bot.stop(reason); stopped = true; } catch { /* Polling may not have started yet. */ }
+      try { bot.stop(reason); stopped = true; } catch { /* Pot ser que encara no s'hagi iniciat la consulta periòdica de missatges. */ }
       if (stopped && polling) await polling.catch(() => {});
-      // Close idle HTTP connections before draining the database pool.
+      // Tanca les connexions HTTP inactives abans de tancar les connexions a la base de dades.
       if (server) await new Promise((resolve, reject) => server.close(error => error ? reject(error) : resolve()));
       await db.close();
     })();
@@ -40,7 +40,7 @@ async function main() {
     await db.authenticate();
     console.log('Connexió a la base de dades establerta correctament.');
     registerCommands(bot);
-    // Authenticate the bot before opening the HTTP port.
+    // Autentica el bot abans d'obrir el port HTTP.
     bot.botInfo = await bot.telegram.getMe();
     server = await initWebServer();
     for (const signal of ['SIGINT', 'SIGTERM']) {
@@ -49,7 +49,7 @@ async function main() {
         process.exitCode = 1;
       }));
     }
-    // launch runs until polling stops; handle startup and polling failures.
+    // launch s'executa fins que s'atura la consulta de missatges; gestiona els errors d'inici i de consulta.
     polling = bot.launch();
     polling.catch(fail).catch(error => {
       console.error('Error tancant el servei:', error);

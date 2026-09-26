@@ -29,7 +29,7 @@ const replaceEncadenat = async (equip, agulla, via, exit, punts, grau = null) =>
   });
 };
 
-// Lock the team for bonuses, or the route for a globally unique totem claim.
+// Bloqueja l'equip per atorgar bonus, o la via perquè cada tòtem només es pugui reclamar una vegada.
 const awardOnce = async (equip, agulla, via, punts, global = false) => {
   return sequelize.transaction(async transaction => {
     const model = global ? Via : Equip;
