@@ -2,6 +2,10 @@ const { Markup } = require('telegraf');
 const teamController = require('../../../controllers/team.controller');
 const encadenatController = require('../../../controllers/encadenat.controller');
 
+const escapeHtml = text => text.replace(/[&<>]/g, char => ({
+  '&': '&amp;', '<': '&lt;', '>': '&gt;',
+})[char]);
+
 const bonuses = new Map([
   ['4001', { name: 'Equipament', points: 20 }],
   ['4002', { name: 'Logotip', points: 10 }],
@@ -13,7 +17,9 @@ const handleBonusCommand = () => async ctx => {
   const equips = await teamController.getTeams();
   const teclat = equips.map(equip => [Markup.button.callback(equip.nom, `equip_${equip.id}`)]);
   teclat.push([Markup.button.callback('Cancel·lar', 'cancel')]);
-  return ctx.reply('A qui vols posar un bonus?', Markup.inlineKeyboard(teclat));
+  return ctx.reply('A qui vols posar un <b>Bonus</b>?', {
+    parse_mode: 'html', ...Markup.inlineKeyboard(teclat),
+  });
 };
 
 const handleBonusTeamAction = () => async ctx => {
@@ -22,7 +28,9 @@ const handleBonusTeamAction = () => async ctx => {
     Markup.button.callback(bonus.name, `bonus_${equipId}_${id}_${bonus.points}`),
   ]);
   teclat.push([Markup.button.callback('Cancel·lar', 'cancel')]);
-  return ctx.editMessageText('Quin bonus vols atorgar?', Markup.inlineKeyboard(teclat));
+  return ctx.editMessageText('Quin <b>bonus</b> vols atorgar?', {
+    parse_mode: 'html', ...Markup.inlineKeyboard(teclat),
+  });
 };
 
 const handleGiveBonusAction = () => async ctx => {
@@ -33,9 +41,11 @@ const handleGiveBonusAction = () => async ctx => {
   if (!equip) return ctx.reply('Aquest equip no existeix.');
   const awarded = await encadenatController.awardOnce(equipId, 200, bonusId, bonus.points);
   const message = awarded
-    ? `Bonus ${bonus.name} atorgat a l'equip ${equip.nom}!`
-    : `L'equip ${equip.nom} ja tenia el bonus ${bonus.name}!`;
-  return ctx.editMessageText(message, Markup.inlineKeyboard([]));
+    ? `Bonus <b>${escapeHtml(bonus.name)}</b> atorgat a l'equip <b>${escapeHtml(equip.nom)}</b>!`
+    : `L'equip <b>${escapeHtml(equip.nom)}</b> ja tenia el bonus <b>${escapeHtml(bonus.name)}</b>!`;
+  return ctx.editMessageText(message, {
+    parse_mode: 'html', ...Markup.inlineKeyboard([]),
+  });
 };
 
 module.exports = { handleBonusCommand, handleBonusTeamAction, handleGiveBonusAction };

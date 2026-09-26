@@ -75,3 +75,38 @@ test('new-route callbacks preserve the doubled grade score', async () => {
   assert.equal(calcula_punts('7c+*'), 17);
   assert.throws(() => calcula_punts('unknown'), /Grau desconegut/);
 });
+
+test('bonus messages preserve HTML formatting and escape team names', async () => {
+  const { handleBonusCommand, handleBonusTeamAction, handleGiveBonusAction } = require('../services/telegram/controllers/bonus.controller');
+  const sent = [];
+  const ctx = {
+    reply: async (text, options) => { sent.push({ text, options }); },
+    editMessageText: async (text, options) => { sent.push({ text, options }); },
+  };
+  mock.method(teams, 'getTeams', async () => [{ id: 1, nom: 'Team' }]);
+  mock.method(teams, 'getTeam', async () => ({ nom: 'A & <B>' }));
+  const award = mock.method(scores, 'awardOnce', async () => ({}));
+
+  await handleBonusCommand()(ctx);
+  ctx.match = ['equip_1', '1'];
+  await handleBonusTeamAction()(ctx);
+  ctx.match = ['bonus_1_4001_20', '1', '4001', '20'];
+  await handleGiveBonusAction()(ctx);
+  award.mock.mockImplementation(async () => null);
+  await handleGiveBonusAction()(ctx);
+
+  assert.deepEqual(sent.map(message => message.text), [
+    'A qui vols posar un <b>Bonus</b>?',
+    'Quin <b>bonus</b> vols atorgar?',
+    "Bonus <b>Equipament</b> atorgat a l'equip <b>A &amp; &lt;B&gt;</b>!",
+    "L'equip <b>A &amp; &lt;B&gt;</b> ja tenia el bonus <b>Equipament</b>!",
+  ]);
+  for (const message of sent) {
+    assert.equal(message.options.parse_mode, 'html');
+    assert.ok(Array.isArray(message.options.reply_markup.inline_keyboard));
+  }
+  assert.equal(sent[0].options.reply_markup.inline_keyboard[0][0].callback_data, 'equip_1');
+  assert.equal(sent[1].options.reply_markup.inline_keyboard[0][0].callback_data, 'bonus_1_4001_20');
+  assert.deepEqual(sent[2].options.reply_markup.inline_keyboard, []);
+  assert.deepEqual(sent[3].options.reply_markup.inline_keyboard, []);
+});
