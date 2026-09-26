@@ -4,9 +4,9 @@ const encadenatController = require('../../../controllers/encadenat.controller')
 const handleRankingComand = () => async (ctx) => {
     const ranking = await encadenatController.getRanking()
 
-    message = "RANKING:\nPosició NOM (Nombre d'agulles) Punts"
+    let message = "RANKING:\nPosició NOM (Nombre d'agulles) Punts"
 
-    counter = 1
+    let counter = 1
 
     ranking.forEach(equip => {
       message += `\n<b>${counter++}</b> - ${equip.nom} (${equip.agulles}) ${equip.punts}`

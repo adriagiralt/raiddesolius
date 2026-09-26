@@ -1,52 +1,72 @@
-require('dotenv').config();
-const { Telegraf } = require('telegraf');
-const db = require('./utils/db');
-const telegramService = require('./services/telegram/bot');
-const { initWebServer } = require("./services/web/index");
+require('dotenv').config({ quiet: true });
 
-//Importar Models
-const Equip = require('./models/equip.model'); 
-const Agulla = require('./models/agulla.model'); 
-const Via = require('./models/via.model'); 
-const Encadenats = require('./models/encadenat.model'); 
-const Area = require('./models/area.model'); 
+async function main() {
+  const required = ['TELEGRAM_TOKEN', 'DB_HOST', 'DB_USER', 'DB_NAME'];
+  const missing = required.filter(name => !process.env[name]);
+  if (missing.length) throw new Error(`Falten variables d'entorn: ${missing.join(', ')}`);
+  for (const name of ['PORT', 'DB_PORT']) {
+    if (process.env[name] !== undefined && (!/^\d+$/.test(process.env[name]) || Number(process.env[name]) < 1 || Number(process.env[name]) > 65535)) {
+      throw new Error(`${name} ha de ser un port entre 1 i 65535`);
+    }
+  }
 
-// Crea una nova instància del bot de Telegram
-const bot = new Telegraf(process.env.TELEGRAM_TOKEN);
+  const { Telegraf } = require('telegraf');
+  const db = require('./utils/db');
+  const { registerCommands } = require('./services/telegram/bot');
+  const { initWebServer } = require('./services/web');
+  const bot = new Telegraf(process.env.TELEGRAM_TOKEN);
+  let server;
+  let polling;
+  let stopping;
+  const shutdown = reason => {
+    if (stopping) return stopping;
+    stopping = (async () => {
+      let stopped = false;
+      try { bot.stop(reason); stopped = true; } catch { /* Polling may not have started yet. */ }
+      if (stopped && polling) await polling.catch(() => {});
+      // Close idle HTTP connections before draining the database pool.
+      if (server) await new Promise((resolve, reject) => server.close(error => error ? reject(error) : resolve()));
+      await db.close();
+    })();
+    return stopping;
+  };
+  const fail = async error => {
+    console.error('Error del servei:', error);
+    process.exitCode = 1;
+    await shutdown('error');
+  };
 
-// Connexió a la base de dades
-db.authenticate()
-  .then(() => {
+  try {
+    await db.authenticate();
     console.log('Connexió a la base de dades establerta correctament.');
+    registerCommands(bot);
+    // Authenticate the bot before opening the HTTP port.
+    bot.botInfo = await bot.telegram.getMe();
+    server = await initWebServer();
+    for (const signal of ['SIGINT', 'SIGTERM']) {
+      process.once(signal, () => shutdown(signal).then(() => process.exit(0)).catch(error => {
+        console.error('Error tancant el servei:', error);
+        process.exitCode = 1;
+      }));
+    }
+    // launch runs until polling stops; handle startup and polling failures.
+    polling = bot.launch();
+    polling.catch(fail).catch(error => {
+      console.error('Error tancant el servei:', error);
+      process.exitCode = 1;
+    });
+    return { shutdown };
+  } catch (error) {
+    await shutdown('startup error');
+    throw error;
+  }
+}
 
-    // Sincronitzar els models i crear les taules si no existeixen
-    //return db.sync({force: false}); // Això crearà la taula d'usuaris automàticament si no existeix
-  })
-  .then(() => {
-    console.log('Connexió a la base de dades establerta correctament.');
-  })
-  .catch(err => {
-    console.error('Error al connectar-se a la base de dades:', err);
+if (require.main === module) {
+  main().catch(error => {
+    console.error('No s’ha pogut iniciar el servei:', error.message);
+    process.exitCode = 1;
   });
+}
 
-// Registra els comandaments del bot
-telegramService.registerCommands(bot);
-
-// Inicia el bot
-bot.launch();
-console.log("Bot de Telegram en funcionament...");
-
-// --------------------
-// Engegar web
-// --------------------
-
-initWebServer();
-
-// --------------------
-// Tancament net
-// --------------------
-
-
-// Gràcia controlada quan es tanca el procés
-process.once('SIGINT', () => bot.stop('SIGINT'));
-process.once('SIGTERM', () => bot.stop('SIGTERM'));
+module.exports = { main };

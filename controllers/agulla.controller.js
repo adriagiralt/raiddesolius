@@ -7,7 +7,7 @@ const getAgulla = async (codi) => {
       const agulla = await Agulla.findOne({
         where: { codi: codi },
         include: [{ model: Via,
-          where: { visible: 1 }}],
+          where: { visible: 1 }, required: false }],
           order: [
               [Via, 'grau', 'ASC'],
               [Via, 'nom', 'ASC']
@@ -16,6 +16,7 @@ const getAgulla = async (codi) => {
       return agulla
     } catch (error) {
       console.error('Error trobant agulles:', error);
+      throw error;
     }
 };
 
@@ -24,7 +25,7 @@ const getAgullaById = async (id) => {
     const agulla = await Agulla.findOne({
       where: { id: id },
       include: [{ model: Via,
-        where: { visible: 1 }}],
+        where: { visible: 1 }, required: false }],
         order: [
             [Via, 'grau', 'ASC'],
             [Via, 'nom', 'ASC']
@@ -33,12 +34,13 @@ const getAgullaById = async (id) => {
     return agulla
   } catch (error) {
     console.error('Error trobant agulles:', error);
+    throw error;
   }
 };
 
 const getAgullaGraus = async (id) => {
   try {
-    const [results, metadata] = await sequelize.query(`SELECT agulles.id, GROUP_CONCAT(DISTINCT vies.grau ORDER BY vies.grau ASC SEPARATOR ',') AS graus FROM agulles JOIN vies ON vies.agulla_id = agulles.id WHERE agulles.id = ${id} GROUP BY agulles.id`);
+    const [results, metadata] = await sequelize.query(`SELECT agulles.id, GROUP_CONCAT(DISTINCT vies.grau ORDER BY vies.grau ASC SEPARATOR ',') AS graus FROM agulles JOIN vies ON vies.agulla_id = agulles.id WHERE agulles.id = :id AND vies.visible = 1 GROUP BY agulles.id`, { replacements: { id } });
 
     return results;
   }

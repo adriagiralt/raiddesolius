@@ -10,18 +10,20 @@ const getVia = async (id) => {
       return via
     } catch (error) {
       console.error('Error trobant vies:', error);
+      throw error;
     }
 };
 
 const getViaByCode = async (codi) => {
   try {
     const via = await Via.findOne({
-      where: {codi: codi},
+      where: { codi, visible: 1 },
       include: [{ model: Agulla }]
     });
     return via
   } catch (error) {
     console.error('Error trobant vies:', error);
+    throw error;
   }
 };
   

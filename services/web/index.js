@@ -3,18 +3,15 @@ const path = require("path");
 const db = require("../../utils/db");
 
 // Models
-const Equip = require("../../models/equip.model");
 const Agulla = require("../../models/agulla.model");
 const Encadenat = require("../../models/encadenat.model");
 
-const userController = require('../../controllers/user.controller');
 const encadenatController = require('../../controllers/encadenat.controller');
 const equipController = require('../../controllers/team.controller')
 const agullaController = require('../../controllers/agulla.controller')
 
-function initWebServer() {
+function createWebApp() {
   const app = express();
-  const PORT = process.env.PORT || 3000;
 
   // Servir carpeta public (HTML, CSS, JS)
   app.use(express.static(path.join(__dirname, "public")));
@@ -49,7 +46,7 @@ function initWebServer() {
           "agulla_id",
           [db.fn("COUNT", db.col("agulla_id")), "total"],
         ],
-        group: ["agulla_id"],
+        group: ["Encadenat.agulla_id", "Agulla.id", "Agulla.nom"],
         order: [[db.literal("total"), "DESC"]],
         limit: 1,
         include: [{ model: Agulla, attributes: ["nom"] }],
@@ -76,7 +73,11 @@ function initWebServer() {
 // Endpoint últims encadenats per equip
   app.get("/api/ultims/:equip", async (req, res) => {
   try {
-    const ultims = await encadenatController.getLastEncadenatsByTeam(req.params.equip);
+    const equip = Number(req.params.equip);
+    if (!/^[1-9]\d*$/.test(req.params.equip) || !Number.isSafeInteger(equip)) {
+      return res.status(400).json({ error: "L'equip ha de ser un identificador enter positiu" });
+    }
+    const ultims = await encadenatController.getLastEncadenatsByTeam(equip);
     res.json(ultims);
   } catch (err) {
     console.error(err);
@@ -123,10 +124,17 @@ function initWebServer() {
   
   });
 
-  // Arrencar servidor
-  app.listen(PORT, () => {
-    console.log(`🌐 Web en marxa a http://localhost:${PORT}`);
+  return app;
+}
+
+function initWebServer(port = process.env.PORT || 3000) {
+  return new Promise((resolve, reject) => {
+    const server = createWebApp().listen(port, () => {
+      console.log(`Web en marxa al port ${server.address().port}`);
+      resolve(server);
+    });
+    server.once('error', reject);
   });
 }
 
-module.exports = { initWebServer };
+module.exports = { createWebApp, initWebServer };

@@ -6,11 +6,12 @@ const addUser = async (telegramId, username) => {
     const [user, created] = await User.findOrCreate({
       where: { telegram_id: telegramId },
       include: [{ model: Equip }],
-      defaults: { username },
+      defaults: { nom: username },
     });
     return user
   } catch (error) {
     console.error('Error afegint usuari:', error);
+    throw error;
   }
 };
 
@@ -23,6 +24,7 @@ const getUser = async (telegramId) => {
     return user
   } catch (error) {
     console.error('Error cercant usuari:', error);
+    throw error;
   }
 };
 

@@ -31,4 +31,7 @@ const Encadenat = sequelize.define('Encadenat', {
 }
 );
 
+const Agulla = require('./agulla.model');
+Encadenat.belongsTo(Agulla, { foreignKey: 'agulla_id', constraints: false });
+
 module.exports = Encadenat;

@@ -82,6 +82,12 @@
   </div>
 
   <script>
+  function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, char => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    })[char]);
+  }
+
   const vistaSelect = document.getElementById("vista");
   let refrescInterval;
 
@@ -111,9 +117,9 @@
           ${ranking.map((r, i) => `
             <tr>
               <td>${i + 1}</td>
-              <td>${r.nom}</td>
-              <td>${r.agulles}</td>
-              <td>${r.punts}</td>
+              <td>${escapeHtml(r.nom)}</td>
+              <td>${escapeHtml(r.agulles)}</td>
+              <td>${escapeHtml(r.punts)}</td>
             </tr>
           `).join("")}
         `;
@@ -127,7 +133,7 @@
           <tr><th>Equips</th></tr>
           ${equips.map((e, i) => `
             <tr>
-              <td>${e.nom}</td>
+              <td>${escapeHtml(e.nom)}</td>
             </tr>
           `).join("")}
         `;
@@ -154,7 +160,7 @@
           <h2>📜 Últims Encadenats</h2>
           <select id="equipSelect">
             <option value="tots"> -- Tots -- </option>
-            ${equips.map(e => `<option value="${e.id}" ${e.id == equip ? "selected" : ""}>${e.nom}</option>`).join('')}
+            ${equips.map(e => `<option value="${escapeHtml(e.id)}" ${e.id == equip ? "selected" : ""}>${escapeHtml(e.nom)}</option>`).join('')}
           </select>
           <table>
             <thead>
@@ -163,11 +169,11 @@
             <tbody>
               ${ultims.map(u => `
                 <tr>
-                  <td>${u.equipNom}</td>
-                  <td>${u.agullaNom}</td>
-                  <td>${u.viaNom || "-"}</td>
-                  <td>${u.punts}</td>
-                  <td>${new Date(u.createdAt).toLocaleString("ca-ES")}</td>
+                  <td>${escapeHtml(u.equipNom)}</td>
+                  <td>${escapeHtml(u.agullaNom)}</td>
+                  <td>${escapeHtml(u.viaNom || "-")}</td>
+                  <td>${escapeHtml(u.punts)}</td>
+                  <td>${escapeHtml(new Date(u.createdAt).toLocaleString("ca-ES"))}</td>
                 </tr>
               `).join('')}
             </tbody>
@@ -191,7 +197,7 @@
           <tr><th>Agulles</th><th>Equips</th></tr>
           ${agulles.map((a, i) => `
             <tr>
-              <td>${a.nom}</td><td>${a.total}</td>
+              <td>${escapeHtml(a.nom)}</td><td>${escapeHtml(a.total)}</td>
             </tr>
           `).join("")}
         `;
