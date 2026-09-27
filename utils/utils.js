@@ -25,6 +25,7 @@ const calcula_punts = (grau) => {
         mult = 2
         grau = grau.slice(0, -1)
     }
+    if (!Object.hasOwn(grau_punts, grau)) throw new Error(`Grau desconegut: ${grau}`);
     return grau_punts[grau] * mult;
 };
 

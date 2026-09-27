@@ -21,7 +21,7 @@ const handleText = () => async (ctx) => {
       const user = await userController.addUser(ctx.from.id) //FALTA COMPROVAR NO PUJAR 2 VEGADES
 
       if (user.dataValues.Equip == null) {
-        ctx.reply(`No tens equip, contacta amb l'administració`);
+        await ctx.reply(`No tens equip, contacta amb l'administració`);
         return;
       }
 
@@ -34,10 +34,10 @@ const handleText = () => async (ctx) => {
        if (tipus_equip == "Descoberta"){
         console.log(agulla)
         if (agulla == null){
-          ctx.reply(`Aquest codi és incorrecte`);
+          await ctx.reply(`Aquest codi és incorrecte`);
           return;
         }
-         await encadenatController.setEncadenat(user.dataValues.team_id, agulla.id, null, null, 0, null)
+         await encadenatController.replaceEncadenat(user.dataValues.team_id, agulla.id, null, null, 0, null)
 
          await ctx.reply(`Enhorabona! Heu pujat a l'Agulla <b>${agulla.nom}</b>`, {
             parse_mode: 'html'
@@ -50,10 +50,9 @@ const handleText = () => async (ctx) => {
             console.log("QUÈ PASSA? 24")
             const user = await userController.addUser(ctx.from.id) //FALTA COMPROVAR NO PUJAR 2 VEGADES
 
-            const montclar = await encadenatController.getEncadenatByEquipIViaId(user.dataValues.team_id, 1742)
+            const montclar = await encadenatController.awardOnce(user.dataValues.team_id, agulla.id, 1742, 15)
 
-            if (montclar === null) {
-              await encadenatController.setEncadenat(user.dataValues.team_id, agulla.id, 1742, null, 15, null)
+            if (montclar) {
               const ranking = await encadenatController.getRanking()
 
               let pos = 0
@@ -74,7 +73,7 @@ const handleText = () => async (ctx) => {
               await check_arees(user.dataValues.team_id, ctx)
             }
             else {
-              ctx.reply(`Ja heu pujat al Montclar! Tramposos D:`);
+              await ctx.reply(`Ja heu pujat al Montclar! Tramposos D:`);
             }
             return
        } else if (agulla && agulla.nom === "Briefing") {
@@ -90,12 +89,12 @@ const handleText = () => async (ctx) => {
 
           teclat.push([Markup.button.callback("Cancel·lar", "cancel")])
 
-          ctx.reply(`Estàs preparat per començar el raid?`, { parse_mode: 'html', reply_markup: Markup.inlineKeyboard(teclat).reply_markup } )
+          await ctx.reply(`Estàs preparat per començar el raid?`, { parse_mode: 'html', reply_markup: Markup.inlineKeyboard(teclat).reply_markup } )
           
        } else if (agulla && agulla.nom === "Esquella") {
               const user = await userController.addUser(ctx.from.id) //FALTA COMPROVAR NO PUJAR 2 VEGADES
           
-              await encadenatController.setEncadenat(user.dataValues.team_id, agulla.id, 1744, null, 0, null)
+              await encadenatController.awardOnce(user.dataValues.team_id, agulla.id, 1744, 0)
               const ranking = await encadenatController.getRanking()
 
               let pos = 0
@@ -128,7 +127,7 @@ const handleText = () => async (ctx) => {
 
          teclat.push([Markup.button.callback("Cancel·lar", "cancel")])
 
-         ctx.reply(`Enhorabona! Heu pujat a <b>${agulla.nom}</b>`, { parse_mode: 'html', reply_markup: Markup.inlineKeyboard(teclat).reply_markup } )
+         await ctx.reply(`Enhorabona! Heu pujat a <b>${agulla.nom}</b>`, { parse_mode: 'html', reply_markup: Markup.inlineKeyboard(teclat).reply_markup } )
        }
        else {
         //si no hem trobat agulles cerquem totems
@@ -139,18 +138,17 @@ const handleText = () => async (ctx) => {
 
           //comprovar que ningú hagi puntuat aquest token encara
           console.log(totem.dataValues.id)
-          const encadenat = await encadenatController.getEncadenatByViaId(totem.dataValues.id)
+          const encadenat = await encadenatController.awardOnce(user.dataValues.team_id, totem.dataValues.agulla_id, totem.dataValues.id, 5, true)
 
-          if (encadenat == null || true) { //LOGICA DELS TOTEMS!!!!
+          if (encadenat) { //LOGICA DELS TOTEMS!!!!
             await totem_handler.totem_handler(totem.dataValues.id)
-            await encadenatController.setEncadenat(user.dataValues.team_id, totem.dataValues.Agulla.id, totem.dataValues.id, null, 5, null)
-            ctx.reply(`Enhorabona! Heu trobat el tòtem ${totem.dataValues.nom}!`)
+            await ctx.reply(`Enhorabona! Heu trobat el tòtem ${totem.dataValues.nom}!`)
           }
           else {
-            ctx.reply(`Algú ja ha trobat aquest tòtem abans`);
+            await ctx.reply(`Algú ja ha trobat aquest tòtem abans`);
           }
         } else {
-          ctx.reply(`Aquest codi és incorrecte`);
+          await ctx.reply(`Aquest codi és incorrecte`);
         }
        }
   

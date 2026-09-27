@@ -8,7 +8,6 @@ const { handleViesCommand } = require('./controllers/via.controller');
 const { handleBonusCommand, handleBonusTeamAction, handleGiveBonusAction } = require('./controllers/bonus.controller');
 const { handleCancelAction } = require('./controllers/cancel.controller')
 
-const teamController = require('../../controllers/team.controller');
 const agullaController = require('../../controllers/agulla.controller');
 const viaController = require('../../controllers/via.controller');
 const encadenatController = require('../../controllers/encadenat.controller');
@@ -20,6 +19,14 @@ const { check_arees } = require('./utils/check_arees');
 const utils = require('../../utils/utils');
 
 const registerCommands = (bot) => {
+  bot.catch(async (error, ctx) => {
+    console.error('Error processant actualització de Telegram:', error);
+    try {
+      await ctx.reply('No s’ha pogut completar l’acció. Torna-ho a provar.');
+    } catch (replyError) {
+      console.error('Error enviant resposta de Telegram:', replyError);
+    }
+  });
   // Comanda d'inici /start
   //bot.start(handleStartCommand(userController));
   bot.start(handleInfoCommand());
@@ -39,15 +46,16 @@ const registerCommands = (bot) => {
 
   bot.action('cancel', handleCancelAction());
 
-  bot.action(/equip_(\d+)/, handleBonusTeamAction());
+  bot.action(/^equip_(\d+)$/, checkAdminPolicy, handleBonusTeamAction());
 
-  bot.action(/bonus_(\d+)_(\d+)_(\d+)/, handleGiveBonusAction());
+  bot.action(/^bonus_(\d+)_(\d+)_(\d+)$/, checkAdminPolicy, handleGiveBonusAction());
 
-  bot.action(/via_(\d+)/, async (ctx) => {
+  bot.action(/^via_(\d+)$/, async (ctx) => {
     const selectedOption = ctx.callbackQuery.data; // Obtenim el text del botó premut
 
     const id = selectedOption.split('_')[1]
     const via = await viaController.getVia(id)
+    if (!via) return ctx.reply('Aquesta via ja no està disponible.');
 
     let teclat = [
       [Markup.button.callback("Tots", "encadenat_2_" + via.id)],
@@ -57,22 +65,18 @@ const registerCommands = (bot) => {
     
     teclat.push([Markup.button.callback("Cancel·lar", "cancel")])
 
-    ctx.editMessageText(`Heu seleccionat la Via <b>${via.nom}</b>\nQuants heu encadenat?`, {
+    return ctx.editMessageText(`Heu seleccionat la Via <b>${via.nom}</b>\nQuants heu encadenat?`, {
       reply_markup: { inline_keyboard: teclat },
       parse_mode: 'html'
     }).catch(error => console.error('Error edit 63:', error));
   });
 
-  bot.action(/agulla_nose_(\d+)/, async (ctx) => {
+  bot.action(/^agulla_nose_(\d+)$/, async (ctx) => {
     const selectedOption = ctx.callbackQuery.data; // Obtenim el text del botó premut
-
-    console.log(selectedOption)
 
     const id = selectedOption.split('_')[2]
     const agulla = await agullaController.getAgullaById(id)
     const mec = await agullaController.getAgullaGraus(id)
-
-    console.log(mec)
 
     if (agulla != null) {
       const graus = (mec.length > 0 ? mec[0]["graus"].split(","): "4,4+,5,5+,6a,6a+,6b,6b+,6c,6c+,7a".split(','))
@@ -82,17 +86,15 @@ const registerCommands = (bot) => {
      });
      
      teclat.push([Markup.button.callback("Cancel·lar", "cancel")])
-     ctx.editMessageText(`Quin grau heu fet?`, { parse_mode: 'html', reply_markup: Markup.inlineKeyboard(teclat).reply_markup } ).catch(error => console.error('Error edit 85:', error));
+     return ctx.editMessageText(`Quin grau heu fet?`, { parse_mode: 'html', reply_markup: Markup.inlineKeyboard(teclat).reply_markup } ).catch(error => console.error('Error edit 85:', error));
     }
     else {
-      ctx.editMessageText(`Aquest codi no és de cap agulla.`).catch(error => console.error('Error edit 88:', error));;
+      return ctx.editMessageText(`Aquest codi no és de cap agulla.`).catch(error => console.error('Error edit 88:', error));;
     }
   })
 
-  bot.action(/agulla_nova_(\d+)/, async (ctx) => {
+  bot.action(/^agulla_nova_(\d+)$/, async (ctx) => {
     const selectedOption = ctx.callbackQuery.data; // Obtenim el text del botó premut
-
-    console.log(selectedOption)
 
     const id = selectedOption.split('_')[2]
     const agulla = await agullaController.getAgullaById(id)
@@ -105,19 +107,17 @@ const registerCommands = (bot) => {
      });
      
      teclat.push([Markup.button.callback("Cancel·lar", "cancel")])
-     ctx.editMessageText(`Quin grau heu fet?`, { parse_mode: 'html', reply_markup: Markup.inlineKeyboard(teclat).reply_markup } ).catch(error => console.error('Error edit 108:', error));
+     return ctx.editMessageText(`Quin grau heu fet?`, { parse_mode: 'html', reply_markup: Markup.inlineKeyboard(teclat).reply_markup } ).catch(error => console.error('Error edit 108:', error));
     }
     else {
-      ctx.editMessageText(`Aquest codi no és de cap agulla.`).catch(error => console.error('Error edit 111:', error));;
+      return ctx.editMessageText(`Aquest codi no és de cap agulla.`).catch(error => console.error('Error edit 111:', error));;
     }
   })
 
 
 
-  bot.action(/encadenat_(\d+)_(\d+)$/, async (ctx) => {
+  bot.action(/^encadenat_([012])_(\d+)$/, async (ctx) => {
 
-    console.log("ENCADENAT! 119")
-    
     const selectedOption = ctx.callbackQuery.data; // Obtenim el text del botó premut
 
     const selectedOptionSplited = selectedOption.split("_");
@@ -126,20 +126,17 @@ const registerCommands = (bot) => {
 
     const via = (id != 0 ? await viaController.getVia(id) : null)
 
-    console.log(via)
-    console.log(via.Agulla)
+    if (!via || !via.Agulla) return ctx.reply('Aquesta via ja no està disponible.');
 
     const punts_via = utils.calcula_punts(via.grau)
 
     const punts = via.Agulla.punts + punts_via * encadenats / 2
 
-    console.log(ctx.from.id)
     const user = await userController.addUser(ctx.from.id)
-    console.log(user)
 
-    await encadenatController.deleteEncadenatByAgullaTeam(via.agulla_id, user.dataValues.team_id)
+    if (!user.team_id) return ctx.reply('No tens equip, contacta amb l’administració');
 
-    await encadenatController.setEncadenat(user.dataValues.team_id, via.agulla_id, via.id, encadenats, punts)
+    await encadenatController.replaceEncadenat(user.dataValues.team_id, via.agulla_id, via.id, encadenats, punts)
 
     await check_arees(user.dataValues.team_id, ctx)
 
@@ -156,16 +153,14 @@ const registerCommands = (bot) => {
       }
     })
     
-    ctx.editMessageText(`Heu fet ${punts || 0} Punts!\nEn teniu ${punts_totals}!\nAneu en ${pos}a posició!`, {
+    return ctx.editMessageText(`Heu fet ${punts || 0} Punts!\nEn teniu ${punts_totals}!\nAneu en ${pos}a posició!`, {
       reply_markup: { inline_keyboard: [] },
       parse_mode: 'html'
     }).catch(error => console.error('Error edit 162:', error));;
   });
 
-  bot.action(/encadenat_(\d+)_(\d+)_([a-zA-Z0-9\+]+)/, async (ctx) => {
+  bot.action(/^encadenat_([012])_(\d+)_((?:[345]\+?|[67][abc]\+?)\*?)$/, async (ctx) => {
 
-    console.log("NO HO SE! 198")
-    
     const selectedOption = ctx.callbackQuery.data; // Obtenim el text del botó premut
 
     const selectedOptionSplited = selectedOption.split("_");
@@ -175,15 +170,16 @@ const registerCommands = (bot) => {
 
     const agulla = await agullaController.getAgullaById(id)
 
+    if (!agulla) return ctx.reply('Aquesta agulla ja no està disponible.');
     const punts_via = utils.calcula_punts(grau)
 
     const punts = agulla.punts + punts_via * encadenats / 2
 
     const user = await userController.addUser(ctx.from.id)
 
-    await encadenatController.deleteEncadenatByAgullaTeam(id, user.dataValues.team_id)
+    if (!user.team_id) return ctx.reply('No tens equip, contacta amb l’administració');
 
-    await encadenatController.setEncadenat(user.dataValues.team_id, id, null, encadenats, punts, grau)
+    await encadenatController.replaceEncadenat(user.dataValues.team_id, id, null, encadenats, punts, grau)
 
     await check_arees(user.dataValues.team_id, ctx)
 
@@ -200,16 +196,14 @@ const registerCommands = (bot) => {
       }
     })
 
-    ctx.editMessageText(`Heu fet ${punts} Punts!\nEn teniu ${punts_totals}!\nAneu en ${pos}a posició!`, {
+    return ctx.editMessageText(`Heu fet ${punts} Punts!\nEn teniu ${punts_totals}!\nAneu en ${pos}a posició!`, {
       reply_markup: { inline_keyboard: [] },
       parse_mode: 'html'
     }).catch(error => console.error('Error edit 206:', error));;
   });
 
-  bot.action(/agulla_(\d+)_([a-zA-Z0-9\+]+)/, async(ctx) => {
+  bot.action(/^agulla_(\d+)_((?:[345]\+?|[67][abc]\+?)\*?)$/, async(ctx) => {
 
-    console.log("NO HO SE!!!! 242")
-    
     const selectedOption = ctx.callbackQuery.data; // Obtenim el text del botó premut
   
     const selectedOptionSplited = selectedOption.split("_");
@@ -225,7 +219,7 @@ const registerCommands = (bot) => {
     teclat.push([Markup.button.callback("Cancel·lar", "cancel")])
   
     const tipus_via = (grau[grau.length - 1] === "*" ? "nova" : "desconeguda")
-    ctx.editMessageText(`Heu seleccionat una Via ${tipus_via} de grau <b>${grau}</b>.\nQuants heu encadenat?`, {
+    return ctx.editMessageText(`Heu seleccionat una Via ${tipus_via} de grau <b>${grau}</b>.\nQuants heu encadenat?`, {
       reply_markup: { inline_keyboard: teclat },
       parse_mode: 'html'
     }).catch(error => console.error('Error edit 231:', error));;

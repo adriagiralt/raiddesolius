@@ -11,6 +11,7 @@ const getTeam = async (team_id) => {
       return team
     } catch (error) {
       console.error('Error afegint usuari:', error);
+      throw error;
     }
 };
 
@@ -20,6 +21,7 @@ const getTeams = async () => {
     return teams
   } catch (error) {
     console.error('Error cercant equips:', error);
+    throw error;
   }
 }
 
