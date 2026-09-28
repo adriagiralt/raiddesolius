@@ -1,16 +1,7 @@
 const express = require("express");
 const path = require("path");
-const db = require("../../utils/db");
 
-// Models
-const Agulla = require("../../models/agulla.model");
-const Encadenat = require("../../models/encadenat.model");
-
-const encadenatController = require('../../controllers/encadenat.controller');
-const equipController = require('../../controllers/team.controller')
-const agullaController = require('../../controllers/agulla.controller')
-
-function createWebApp() {
+function createWebApp(data = require('./data-source')) {
   const app = express();
 
   // Servir carpeta public (HTML, CSS, JS)
@@ -19,7 +10,7 @@ function createWebApp() {
   // Endpoint rànquing equips
   app.get("/api/ranking", async (req, res) => {
     try {
-      const ranking = await encadenatController.getRanking()
+      const ranking = await data.getRanking()
       res.json(ranking);
     } catch (err) {
       console.error(err);
@@ -30,7 +21,7 @@ function createWebApp() {
   // Endpoint rànquing equips
   app.get("/api/ranking/agulles", async (req, res) => {
     try {
-      const ranking = await encadenatController.getRankingByAgulla()
+      const ranking = await data.getRankingByAgulla()
       res.json(ranking);
     } catch (err) {
       console.error(err);
@@ -41,18 +32,7 @@ function createWebApp() {
   // Endpoint agulla més pujada
   app.get("/api/top-agulla", async (req, res) => {
     try {
-      const top = await Encadenat.findAll({
-        attributes: [
-          "agulla_id",
-          [db.fn("COUNT", db.col("agulla_id")), "total"],
-        ],
-        group: ["Encadenat.agulla_id", "Agulla.id", "Agulla.nom"],
-        order: [[db.literal("total"), "DESC"]],
-        limit: 1,
-        include: [{ model: Agulla, attributes: ["nom"] }],
-      });
-
-      res.json(top[0] || null);
+      res.json(await data.getTopAgulla());
     } catch (err) {
       console.error(err);
       res.status(500).json({ error: "Error obtenint l'agulla més pujada" });
@@ -62,7 +42,7 @@ function createWebApp() {
   // Endpoint últims encadenats
   app.get("/api/ultims", async (req, res) => {
   try {
-    const ultims = await encadenatController.getLastEncadenats();
+    const ultims = await data.getLastEncadenats();
     res.json(ultims);
   } catch (err) {
     console.error(err);
@@ -77,7 +57,7 @@ function createWebApp() {
     if (!/^[1-9]\d*$/.test(req.params.equip) || !Number.isSafeInteger(equip)) {
       return res.status(400).json({ error: "L'equip ha de ser un identificador enter positiu" });
     }
-    const ultims = await encadenatController.getLastEncadenatsByTeam(equip);
+    const ultims = await data.getLastEncadenatsByTeam(equip);
     res.json(ultims);
   } catch (err) {
     console.error(err);
@@ -88,7 +68,7 @@ function createWebApp() {
   // Endpoint equips
   app.get("/api/equips", async (req, res) => {
   try {
-    const equips = await equipController.getTeams()
+    const equips = await data.getTeams()
     res.json(equips)
   } catch (err) {
     console.error(err);
@@ -101,7 +81,7 @@ function createWebApp() {
   // Endpoint equips no acabats
   app.get("/api/equips/actius", async (req, res) => {
   try {
-    const equips = await equipController.getTeamsNoAcabat()
+    const equips = await data.getTeamsNoAcabat()
     res.json(equips)
   } catch (err) {
     console.error(err);
@@ -114,7 +94,7 @@ function createWebApp() {
   // Endpoint ranking agulles
   app.get("/api/agulles", async (req, res) => {
   try {
-    const agulles = await agullaController.getAgullaRanking()
+    const agulles = await data.getAgullaRanking()
     res.json(agulles)
   } catch (err) {
     console.error(err);
