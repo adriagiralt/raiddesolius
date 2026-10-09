@@ -7,6 +7,7 @@ const { handleRankingComand, handleMyPositionCommands } = require('./controllers
 const { handleViesCommand } = require('./controllers/via.controller');
 const { handleBonusCommand, handleBonusTeamAction, handleGiveBonusAction } = require('./controllers/bonus.controller');
 const { handleCancelAction } = require('./controllers/cancel.controller')
+const { handleTotemAction } = require('./controllers/totem.controller')
 
 const agullaController = require('../../controllers/agulla.controller');
 const viaController = require('../../controllers/via.controller');
@@ -226,6 +227,8 @@ const registerCommands = (bot) => {
     
     
   });
+
+  bot.action(/^totem_(\d)/, handleTotemAction())
 };
 
 

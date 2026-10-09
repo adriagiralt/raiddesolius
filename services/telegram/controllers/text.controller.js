@@ -47,8 +47,8 @@ const handleText = () => async (ctx) => {
 
        //hardcoded molt lleig si puges el cim del Montclar
        if (agulla && agulla.nom === "Montclar") {
-            console.log("QUÈ PASSA? 24")
-            const user = await userController.addUser(ctx.from.id) //FALTA COMPROVAR NO PUJAR 2 VEGADES
+            console.log("QUÈ PASSA? 50")
+            const user = await userController.addUser(ctx.from.id)
 
             const montclar = await encadenatController.awardOnce(user.dataValues.team_id, agulla.id, 1742, 15)
 
@@ -138,11 +138,11 @@ const handleText = () => async (ctx) => {
 
           //comprovar que ningú hagi puntuat aquest token encara
           console.log(totem.dataValues.id)
-          const encadenat = await encadenatController.awardOnce(user.dataValues.team_id, totem.dataValues.agulla_id, totem.dataValues.id, 5, true)
+          const encadenat = await encadenatController.getEncadenatByViaId(totem.dataValues.id)
 
-          if (encadenat) { //LOGICA DELS TOTEMS!!!!
-            await totem_handler.totem_handler(totem.dataValues.id)
+          if (encadenat == null) { //LOGICA DELS TOTEMS!!!!
             await ctx.reply(`Enhorabona! Heu trobat el tòtem ${totem.dataValues.nom}!`)
+            await totem_handler.totem_handler(user.dataValues.team_id, totem.dataValues.Agulla.id, totem.dataValues.id, ctx)
           }
           else {
             await ctx.reply(`Algú ja ha trobat aquest tòtem abans`);
