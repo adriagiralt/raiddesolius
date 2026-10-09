@@ -2,216 +2,83 @@
 <html lang="ca">
 <head>
   <meta charset="UTF-8">
-  <title>9è Raid de Solius</title>
-  <style>
-  body {
-    font-family: Helvetica, Arial, sans-serif;
-    margin: 2rem;
-    background: #e6dfd1; /* tocat a colors terrosos */
-    color: #3b2f25;
-  }
-  h1 { color: #5a3e2b; }
-  select {
-    padding: 6px;
-    font-size: 1em;
-    margin: 1rem 0;
-    background: #f3ebe0;
-    border: 1px solid #c9b49a;
-    border-radius: 6px;
-    color: #3b2f25;
-  }
-  table {
-    border-collapse: collapse;
-    width: 100%;
-    background: #fff7ef;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    margin-top: 1rem;
-  }
-  th, td {
-    border: 1px solid #d1bfa5;
-    padding: 8px 12px;
-    text-align: left;
-  }
-  th { background: #e5d8c8; }
-  ul {
-    list-style-type: none;
-    padding: 0;
-    margin-top: 1rem;
-  }
-  li {
-    background: #fff7ef;
-    margin-bottom: 6px;
-    padding: 8px 12px;
-    border-radius: 4px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-  }
-  .hidden { display: none; }
-</style>
-
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#e6dfd1">
+  <title>9è Raid de Solius · En directe</title>
+  <link rel="preload" href="/fonts/barlow-condensed-bold.ttf" as="font" type="font/ttf" crossorigin>
+  <link rel="stylesheet" href="/scoreboard.css">
+  <script src="/scoreboard.js" defer></script>
 </head>
 <body>
-  <h1>🧗‍♀️9è Raid de Solius 🧗</h1>
+  <div class="scoreboard">
+    <header class="masthead">
+      <div class="identity">
+        <svg class="event-mark" viewBox="0 0 80 90" fill="none" aria-hidden="true">
+          <path d="M3 72 25 23 34 43 49 8 77 72H3Z" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/>
+          <path d="m18 72 16-29 11 29m-9-33 13-8 9 12M3 83h74" stroke="currentColor" stroke-width="2"/>
+          <circle cx="15" cy="13" r="5" fill="currentColor"/>
+        </svg>
+        <div>
+          <div class="eyebrow edition">9è raid · Escalada a Solius</div>
+          <h1>RAID DE SOLIUS<span class="title-dot">.</span></h1>
+        </div>
+      </div>
+      <dl class="event-totals" aria-label="Participació">
+        <div><dt>Equips</dt><dd id="total-teams">—</dd></div>
+        <div><dt>En ruta</dt><dd id="active-total">—</dd></div>
+        <div><dt>Arribats</dt><dd id="finished-total">—</dd></div>
+      </dl>
+      <div class="clock-block">
+        <time id="clock" class="clock">--:--:--</time>
+        <span id="today" class="eyebrow"></span>
+      </div>
+    </header>
 
-  <label for="vista">Selecciona la vista:</label>
-  <select id="vista">
-    <option value="ranking">🏆 Rànquing Equips</option>
-    <option value="ultims">📜 Últims Encadenats</option>
-    <option value="topAgulla">⛰️ Agulla més Pujada</option>
-    <option value="actius">🧗‍♀️ Equips Actius</option>
-  </select>
+    <main class="competition">
+      <section class="ranking-panel" aria-labelledby="ranking-title">
+        <div class="section-heading">
+          <div><p class="eyebrow">La competició</p><h2 id="ranking-title">Classificació</h2></div>
+          <span class="section-note" id="ranking-count">TOP 8</span>
+        </div>
+        <div class="ranking-columns" aria-hidden="true"><span>POS.</span><span>EQUIP</span><span>AGULLES</span><span>PUNTS</span></div>
+        <ol id="ranking" class="ranking-list"><li class="empty-state">Carregant la classificació…</li></ol>
+        <div class="ranking-footnote"><span>Classificació per punts</span><span id="ranking-summary">Esperant els primers resultats</span></div>
+      </section>
 
-  <!-- Continguts -->
-  <div id="rankingView" class="view">
-    <h2>🏆 Rànquing Equips</h2>
-    <table id="ranking"></table>
+      <div class="side-panels">
+        <section class="activity-panel" aria-labelledby="activity-title">
+          <div class="section-heading">
+            <div><p class="eyebrow"><span class="small-dot"></span> L'activitat del raid</p><h2 id="activity-title">Últims registres</h2></div>
+            <span class="section-note">ELS 5 MÉS RECENTS</span>
+          </div>
+          <ol id="activity" class="activity-list"><li class="empty-state">Carregant l'activitat…</li></ol>
+        </section>
+        <section class="pinnacles-panel" aria-labelledby="pinnacles-title">
+          <div class="section-heading">
+            <div><p class="eyebrow">A peu de roca</p><h2 id="pinnacles-title">Les agulles més pujades</h2></div>
+            <span class="section-note">TOP 5</span>
+          </div>
+          <ol id="pinnacles" class="pinnacle-list"><li class="empty-state">Carregant les agulles…</li></ol>
+          <span class="pinnacle-unit">Nombre de registres</span>
+        </section>
+      </div>
+    </main>
+
+    <section class="active-strip" aria-labelledby="active-title">
+      <div class="active-heading"><span class="route-symbol" aria-hidden="true">↗</span><div><h2 id="active-title">En ruta</h2><span id="active-caption">Equips actius</span></div></div>
+      <ul id="active-teams" class="active-teams"><li class="active-empty">Carregant els equips…</li></ul>
+      <span id="active-overflow" class="active-overflow"></span>
+    </section>
+
+    <footer class="broadcast-footer">
+      <div id="connection" class="connection" data-state="loading" role="status"><span class="status-dot" aria-hidden="true"></span><span id="connection-label">Connectant…</span></div>
+      <span id="updated-at">Esperant dades</span>
+      <span class="refresh-note">Actualització automàtica · 20 s</span>
+      <button id="fullscreen" class="fullscreen" type="button" aria-label="Activa la pantalla completa" title="Pantalla completa">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg>
+        <span>Pantalla completa</span>
+      </button>
+    </footer>
   </div>
-
-  <div id="ultimsView" class="view hidden">
-    <h2>📜 Últims Encadenats</h2>
-    <ul id="ultims"></ul>
-  </div>
-
-  <div id="topAgullaView" class="view hidden">
-    <h2>⛰️ Agulla més pujada</h2>
-    <table id="topAgulla"></table>
-  </div>
-
-  <div id="actiusView" class="view hidden">
-    <h2>🧗‍♀️ Equips Actius</h2>
-    <table id="actius"></table>
-  </div>
-
-  <script>
-  function escapeHtml(value) {
-    return String(value ?? '').replace(/[&<>"']/g, char => ({
-      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-    })[char]);
-  }
-
-  const vistaSelect = document.getElementById("vista");
-  let refrescInterval;
-
-  // Canvi de vista
-  vistaSelect.addEventListener("change", () => {
-    mostrarVista(vistaSelect.value);
-    carregarDades(); // refrescar immediatament quan canvia
-  });
-
-  function mostrarVista(vista) {
-    document.querySelectorAll(".view").forEach(div => div.classList.add("hidden"));
-    if (vista === "ranking") document.getElementById("rankingView").classList.remove("hidden");
-    if (vista === "ultims") document.getElementById("ultimsView").classList.remove("hidden");
-    if (vista === "topAgulla") document.getElementById("topAgullaView").classList.remove("hidden");
-    if (vista === "actius") document.getElementById("actiusView").classList.remove("hidden");
-  }
-
-  async function carregarDades() {
-    const vista = vistaSelect.value;
-
-    try {
-      if (vista === "ranking") {
-        const rankingRes = await fetch("/api/ranking");
-        const ranking = await rankingRes.json();
-        document.getElementById("ranking").innerHTML = `
-          <tr><th>Posició</th><th>Equip</th><th>Agulles</th><th>Punts</th></tr>
-          ${ranking.map((r, i) => `
-            <tr>
-              <td>${i + 1}</td>
-              <td>${escapeHtml(r.nom)}</td>
-              <td>${escapeHtml(r.agulles)}</td>
-              <td>${escapeHtml(r.punts)}</td>
-            </tr>
-          `).join("")}
-        `;
-      }
-
-      if (vista === "actius") {
-        const equipsRes = await fetch("/api/equips/actius");
-        const equips = await equipsRes.json();
-        console.log(equips)
-        document.getElementById("actius").innerHTML = `
-          <tr><th>Equips</th></tr>
-          ${equips.map((e, i) => `
-            <tr>
-              <td>${escapeHtml(e.nom)}</td>
-            </tr>
-          `).join("")}
-        `;
-      }
-
-      if (vista === "ultims") {
-        // Intentar obtenir l'select si ja existeix
-        let equipSelect = document.getElementById("equipSelect");
-        const equip = equipSelect ? equipSelect.value : "tots";
-        const equip_txt = equip !== "tots" ? "/" + equip : "";
-
-        // Carregar dades
-        const [ultimsRes, equipsRes] = await Promise.all([
-          fetch("/api/ultims" + equip_txt),
-          fetch("/api/equips")
-        ]);
-        const [ultims, equips] = await Promise.all([
-          ultimsRes.json(),
-          equipsRes.json()
-        ]);
-
-        // Renderitzar
-        document.getElementById("ultimsView").innerHTML = `
-          <h2>📜 Últims Encadenats</h2>
-          <select id="equipSelect">
-            <option value="tots"> -- Tots -- </option>
-            ${equips.map(e => `<option value="${escapeHtml(e.id)}" ${e.id == equip ? "selected" : ""}>${escapeHtml(e.nom)}</option>`).join('')}
-          </select>
-          <table>
-            <thead>
-              <tr><th>Equip</th><th>Agulla</th><th>Via</th><th>Punts</th><th>Hora</th></tr>
-            </thead>
-            <tbody>
-              ${ultims.map(u => `
-                <tr>
-                  <td>${escapeHtml(u.equipNom)}</td>
-                  <td>${escapeHtml(u.agullaNom)}</td>
-                  <td>${escapeHtml(u.viaNom || "-")}</td>
-                  <td>${escapeHtml(u.punts)}</td>
-                  <td>${escapeHtml(new Date(u.createdAt).toLocaleString("ca-ES"))}</td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-        `;
-
-        // Assignar l’event només un cop
-        equipSelect = document.getElementById("equipSelect");
-        if (!equipSelect._listenerAfegit) {
-          equipSelect.addEventListener("change", () => {
-            carregarDades(); // refresca quan canvia
-          });
-          equipSelect._listenerAfegit = true;
-        }
-      }
-
-      if (vista === "topAgulla") {
-       const agullesRes = await fetch("/api/agulles");
-        const agulles = await agullesRes.json();
-        document.getElementById("topAgulla").innerHTML = `
-          <tr><th>Agulles</th><th>Equips</th></tr>
-          ${agulles.map((a, i) => `
-            <tr>
-              <td>${escapeHtml(a.nom)}</td><td>${escapeHtml(a.total)}</td>
-            </tr>
-          `).join("")}
-        `;
-      }
-    } catch (err) {
-      console.error("Error carregant dades:", err);
-    }
-  }
-
-  // Inici
-  mostrarVista("ranking");
-  carregarDades();
-  refrescInterval = setInterval(carregarDades, 20000); // refresc cada 20s
-</script>
-
 </body>
 </html>

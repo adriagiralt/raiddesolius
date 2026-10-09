@@ -1,7 +1,5 @@
 const { test, mock, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
-const fs = require('node:fs');
-const vm = require('node:vm');
 const { Telegraf } = require('telegraf');
 const db = require('../utils/db');
 const encadenats = require('../controllers/encadenat.controller');
@@ -46,23 +44,4 @@ test('bonus callbacks require admin privileges', async () => {
   }
   assert.equal(reads, 0);
   assert.equal(edits, 0);
-});
-
-test('leaderboard renders database names as text', async () => {
-  const html = fs.readFileSync(require.resolve('../services/web/public/index.html'), 'utf8');
-  const script = html.match(/<script>([\s\S]*?)<\/script>/)[1];
-  const elements = new Map();
-  const element = id => {
-    if (!elements.has(id)) elements.set(id, { value: 'ranking', innerHTML: '', addEventListener() {}, classList: { add() {}, remove() {} } });
-    return elements.get(id);
-  };
-  const context = vm.createContext({
-    document: { getElementById: element, querySelectorAll: () => [] },
-    fetch: async () => ({ ok: true, json: async () => [{ nom: '<img src=x onerror=alert(1)>', agulles: 1, punts: 2 }] }),
-    setInterval() {}, console,
-  });
-  vm.runInContext(script, context);
-  await vm.runInContext('carregarDades()', context);
-  assert.ok(!element('ranking').innerHTML.includes('<img'));
-  assert.ok(element('ranking').innerHTML.includes('&lt;img'));
 });

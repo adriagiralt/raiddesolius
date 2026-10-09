@@ -4,6 +4,51 @@ Telegram bot for recording climbs and awarding team points, with a public Expres
 
 ## Run locally
 
+### Preview the current website with fixtures
+
+Use Node.js 24 with `nvm use`, then:
+
+```sh
+npm ci
+npm run preview
+```
+
+Open http://127.0.0.1:3000. This serves the competition display with fictional,
+fixed competition data. It needs no `.env`, database, or Telegram token and
+does not connect to those services. It listens only on this machine.
+If that port is busy, use `PORT=3001 npm run preview`. Stop it with Ctrl+C.
+
+The snapshot includes eight teams, six climbing pinnacles, a bonus, two finished
+teams, tied scores, and a team with no climbs. The latter appears in the active
+teams, but not the ranking, matching the current live query.
+The activity timestamps are fixed on 27 September 2026. Refreshing every
+20 seconds reloads the same snapshot.
+
+Edit `services/web/fixtures.js` to change the sample data. The preview restarts
+when those files change; refresh the browser afterward. Rankings, activity,
+and active teams are derived from the same records.
+
+### Competition monitor / TV
+
+The page displays the top eight teams, five latest records, five most climbed
+pinnacles, and up to six active team names together. Participation totals include
+all teams; an overflow count indicates additional active teams. Equal point totals
+share a ranking position. Pinnacle counts are labelled as records, matching the
+existing API rather than claiming they count distinct teams.
+
+Use **Pantalla completa** in the footer for the event display. The layout is
+designed for landscape monitors, with no scrolling or view switching. Fonts
+are served locally so the display does not depend on a font service.
+
+All five data feeds refresh every 20 seconds without reloading the page.
+Requests time out after 10 seconds and cannot overlap. If a feed fails, the
+previous complete snapshot stays on screen with a warning and its last successful
+update time. The next refresh retries automatically. The clock and activity times
+use the Europe/Madrid timezone. In fixture mode, refreshes return the same fixed
+snapshot; the normal MySQL-backed server shows updates recorded by the Telegram bot.
+
+### Run with MySQL and Telegram
+
 Use Node.js 24 with `nvm use`, then:
 
 ```sh

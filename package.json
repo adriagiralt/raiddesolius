@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
+    "preview": "node --watch services/web/preview.js",
     "dev": "nodemon index.js",
     "start": "node index.js",
     "test": "node --test test/*.test.js",
