@@ -24,13 +24,13 @@ const totem_handler = async (team_id, agulla_id, totem_id, ctx) => {
         case 3003: // pots afegir 5 punts a un altre equip
         case 3004: // pots restar 5 punts a l’equip que vulguis
         case 3005: // pots restar (10) punts a l’equip que vulguis però a tu se te’n resten (5)
-        case 3006: //igual 3003
+        case 3006: //igual 3004
         case 3007: //igual 3005
             let teclat = [];
             teclat.push([Markup.button.callback('Veure els equips', 'totem_'+totem_id)]);
             let text = `Aquest tòtem regala <b>5 punts</b> a un altre equip! 🤯`;
             if (totem_id == 3004) text = `Aquest tòtem resta <b>5 punts</b> a un altre equip! 😈`
-            if (totem_id == 3005) text = `Aquest tòtem resta <b>10 punts</b> a un altre equip però us en resta <b>5</b> a vosaltres! 😨`
+            if (totem_id == 3005 || totem_id == 3007) text = `Aquest tòtem resta <b>10 punts</b> a un altre equip però us en resta <b>5</b> a vosaltres! 😨`
             await ctx.reply(text, {
              parse_mode: 'html', ...Markup.inlineKeyboard(teclat),
             })

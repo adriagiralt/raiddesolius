@@ -13,10 +13,10 @@ const handleTotemAction = () => async (ctx) => {
     const totemsEspecials = new Set([3003, 3004, 3005, 3006, 3007]);
 
     const messages = {
-        3003: "Trieu a quin equip regalareu <b>5 punts</b>.",
+        3003: "Trieu a quin equip atorgareu <b>5 punts</b>.",
         3004: "Trieu a quin equip restareu <b>5 punts</b>.",
         3005: "Trieu a quin equip restareu <b>10 punts</b>.\n(i a vosaltres se us en restaran 5)",
-        3006: "Trieu a quin equip regalareu <b>5 punts</b>.",
+        3006: "Trieu a quin equip atorgareu <b>5 punts</b>.",
         3007: "Trieu a quin equip restareu <b>10 punts</b>.\n(i a vosaltres se us en restaran 5)"
     }
     const punts = {
@@ -38,9 +38,9 @@ const handleTotemAction = () => async (ctx) => {
     } else if (totemsEspecials.has(totem_id) && options == 3) {
         const team_id = selectedOptionSplited[2];
         const equip = await teamController.getTeam(team_id);
-        let text = `Li regalareu <b>5 punts</b> a l'equip <b>${equip.nom}</b>`;
+        let text = `Li atorgareu <b>5 punts</b> a l'equip <b>${equip.nom}</b>`;
         if (totem_id == 3004) text = `Li restareu <b>5 punts</b> a l'equip <b>${equip.nom}</b>`;
-        if (totem_id == 3005 || totem_id == 3007) text = `Li restareu <b>10 punts</b> a l'equip <b>${equip.nom}</b> i vosaltres en perdreu 5</b>`;
+        if (totem_id == 3005 || totem_id == 3007) text = `Li restareu <b>10 punts</b> a l'equip <b>${equip.nom}</b> i vosaltres en perdreu <b>5</b>`;
         await ctx.editMessageText(text, {
         reply_markup: { inline_keyboard: [
             [Markup.button.callback("Confirmar", `totem_${totem_id}_${equip.id}_OK`)],
@@ -59,7 +59,7 @@ const handleTotemAction = () => async (ctx) => {
             await encadenatController.setEncadenat(user.team_id, 300, totem_id, null, punts[totem_id].nosaltres, null)
             let text = `Li heu donat <b>5 punts</b> a l'equip <b>${equip.nom}</b>`;
             if (totem_id == 3004) text = `Li heu restat <b>5 punts</b> a l'equip <b>${equip.nom}</b>`;
-            if (totem_id == 3005 || totem_id == 3007) text = `Li heu restat <b>10 punts</b> a l'equip <b>${equip.nom}</b> i vosaltres n'heu perdut 5</b>`;
+            if (totem_id == 3005 || totem_id == 3007) text = `Li heu restat <b>10 punts</b> a l'equip <b>${equip.nom}</b> i vosaltres n'heu perdut <b>5</b>`;
             await ctx.editMessageText(text, {
                 reply_markup: { inline_keyboard: [] },
                 parse_mode: 'html'
@@ -74,17 +74,17 @@ const handleTotemAction = () => async (ctx) => {
                 if (!telegramId) continue; // Salta si l'usuari no té ID de Telegram
 
                 const message_send = {
-                    3003: `⚠️ L'equip <b>${teu_equip.nom}</b> us ha regalat <b>5 punts</b>!`,
+                    3003: `⚠️ L'equip <b>${teu_equip.nom}</b> us ha atorgat <b>5 punts</b>!`,
                     3004: `⚠️ L'equip <b>${teu_equip.nom}</b> us ha restat <b>5 punts</b>!`,
                     3005: `⚠️ L'equip <b>${teu_equip.nom}</b> ha gastat 5 punts per restar-vos <b>10 punts</b>!`,
-                    3006: `⚠️ L'equip <b>${teu_equip.nom}</b> us ha regalat <b>5 punts</b>!`,
+                    3006: `⚠️ L'equip <b>${teu_equip.nom}</b> us ha atorgat <b>5 punts</b>!`,
                     3007: `⚠️ L'equip <b>${teu_equip.nom}</b> ha gastat 5 punts per restar-vos <b>10 punts</b>!`
                 }
 
                 try {
                     await ctx.telegram.sendMessage(
                         telegramId,
-                        message_send,
+                        message_send[totem_id],
                         { parse_mode: 'html' }
                     );
                 } catch (error) {
