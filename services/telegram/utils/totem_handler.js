@@ -87,7 +87,7 @@ const totem_handler = async (team_id, agulla_id, totem_id, ctx) => {
         case 3020: // totem inútil
         case 3029:
         case 3030:
-            await ctx.reply(`Aquest tòtem no té cap poder! \n Gaudeix de l'adderència!`, { parse_mode: 'html'})
+            await ctx.reply(`Aquest tòtem no té cap poder! \n Gaudeix de l'adherència!`, { parse_mode: 'html'})
             await encadenatController.setEncadenat(team_id, agulla_id, totem_id, null, 0, null)
             break;
         default:

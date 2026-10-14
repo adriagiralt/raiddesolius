@@ -7,10 +7,10 @@ const escapeHtml = text => text.replace(/[&<>]/g, char => ({
 })[char]);
 
 const bonuses = new Map([
-  ['4001', { name: 'Equipament', points: 20 }],
+  ['4001', { name: 'Equipament', points: 5 }],
   ['4002', { name: 'Logotip', points: 10 }],
   ['4003', { name: "Bossa d'escombraries", points: 10 }],
-  ['4004', { name: 'Disfressats', points: 5 }],
+  ['4004', { name: 'Disfressats', points: 20 }],
   ['4005', { name: 'Logotip IA', points: 5 }],
   ['4006', { name: 'Regal 10 punts', points: 10 }],
 ]);
